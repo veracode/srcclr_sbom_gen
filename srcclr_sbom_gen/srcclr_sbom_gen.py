@@ -64,21 +64,21 @@ def convert(results_file, output_file):
 			licenses = [extract_license_model(license) for license in lib['versions'][0]['licenses']]
 			
 			dataset = {
-			"description": lib['description'],
-			"hashes": [
-				{
-					"alg": "SHA-1",
-					"content": hash_sha1
-				},
-				{
-					"alg": "SHA-256",
-					"content": hash_sha2
-				}],
-			"licenses": licenses,
-			"name": "{}{}".format(lib['coordinate1'], coordinate2),
-			"purl": purl,
-			"type": "library",
-			"version": lib["versions"][0]['version']
+				"description": lib['description'],
+				"hashes": [
+					{
+						"alg": "SHA-1",
+						"content": hash_sha1
+					},
+					{
+						"alg": "SHA-256",
+						"content": hash_sha2
+					}],
+				"licenses": licenses,
+				"name": "{}{}".format(lib['coordinate1'], coordinate2),
+				"purl": purl,
+				"type": "library",
+				"version": lib["versions"][0]['version']
 			}
 
 			if lib['author']:
