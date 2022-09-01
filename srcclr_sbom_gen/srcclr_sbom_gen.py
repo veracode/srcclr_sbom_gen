@@ -1,8 +1,30 @@
 #!/usr/bin/env python3
 
-import sys, json
+import json
+import re
+import sys
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
+
+def extract_license_model(raw_license):
+	spdx_id_matcher = r' \(([a-zA-Z0-9-.]+)\)$'
+	license_name = raw_license["license"]
+	findings = re.search(spdx_id_matcher, license_name)
+	license_content = {}
+	
+	if findings:
+		license_id = findings.group(1)
+		license_content = {
+			"id": license_id
+		}
+	else:
+		license_content = {
+			"name": raw_license["license"]
+		}
+
+	return {
+		"license": license_content
+	}
 
 def convert(results_file, output_file):
 	
@@ -11,7 +33,12 @@ def convert(results_file, output_file):
 		return
 
 
-	sbom = {"bomFormat": "CycloneDX",'components':[]}
+	sbom = {
+		"bomFormat": "CycloneDX",
+		"specVersion": "1.4",
+		"version": 1,
+		'components':[]
+	}
 	components = []
 
 	with open(results_file) as file:
@@ -33,25 +60,31 @@ def convert(results_file, output_file):
 			for c in components:
 				if c['purl'] == purl:
 					continue
+
+			licenses = [extract_license_model(license) for license in lib['versions'][0]['licenses']]
+			
 			dataset = {
-			"description": lib['description'],
-			"hashes": [
-				{
-					"alg": "SHA-1",
-					"content": hash_sha1
-				},
-				{
-					"alg": "SHA-256",
-					"content": hash_sha2
-				}],
-			"licenses": lib['versions'][0]['licenses'],
-			"modified": False,
-			"name": "{}{}".format(lib['coordinate1'], coordinate2),
-			"publisher": lib['author'],
-			"purl": purl,
-			"type": "library",
-			"version": lib["versions"][0]['version']
+				"description": lib['description'],
+				"hashes": [
+					{
+						"alg": "SHA-1",
+						"content": hash_sha1
+					},
+					{
+						"alg": "SHA-256",
+						"content": hash_sha2
+					}],
+				"licenses": licenses,
+				"name": "{}{}".format(lib['coordinate1'], coordinate2),
+				"purl": purl,
+				"type": "library",
+				"version": lib["versions"][0]['version']
 			}
+
+			if lib['author']:
+				# null values are not valid according to the spec
+				dataset['publisher'] = lib['author']
+
 			components.append(dataset)
 
 
